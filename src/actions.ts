@@ -38,6 +38,7 @@ import {
 	GetTalkbackDestinations,
 	GetPresetsChoices,
 	FaderLevelChoiceVariable,
+	makeLinearToggle,
 } from './choices.js'
 import {
 	MutePath,
@@ -245,6 +246,44 @@ export function GetActionsList(
 			return defVal ?? 0
 		}
 		return val
+	}
+	function dbToT(db: number) {
+		if (db <= -60) return (db + 90) * (0.05 / 30) // segment 1
+		if (db <= -30) return 0.05 + (db + 60) * (0.2 / 30) // segment 2
+		if (db <= -10) return 0.25 + (db + 30) * (0.25 / 20) // segment 3
+		return 0.5 + (db + 10) * (0.5 / 20) // segment 4
+	}
+
+	/**
+	 * Convert a normalized position t (0 … 1) back to a dB value (‑90 … 10)
+	 * using the same piecewise definition.
+	 */
+	function tToDb(t: number) {
+		if (t <= 0.05) return -90 + t * (30 / 0.05) // segment 1
+		if (t <= 0.25) return -60 + (t - 0.05) * (30 / 0.2) // segment 2
+		if (t <= 0.5) return -30 + (t - 0.25) * (20 / 0.25) // segment 3
+		return -10 + (t - 0.5) * (20 / 0.5) // segment 4
+	}
+	const correctForFader = (currentVal: number, action: CompanionActionInfo, deltaDb: number): number | undefined => {
+		if (action.options.faderLinear) return currentVal
+		// 1️⃣ Convert current dB to normalized position
+		let t = dbToT(currentVal)
+
+		// 2️⃣ Determine which segment we are in to get the proper slope
+		let slope
+		if (currentVal <= -60) slope = 0.05 / 30 // 0.0016667
+		else if (currentVal <= -30) slope = 0.2 / 30 // 0.0066667
+		else if (currentVal <= -10) slope = 0.25 / 20 // 0.0125
+		else slope = 0.5 / 20 // 0.025
+
+		// 3️⃣ Convert the dB delta to a change in normalized position
+		const dt = Number(deltaDb) * slope
+
+		// 4️⃣ Apply the change and clamp to [0,1]
+		t = Math.min(1, Math.max(0, t + dt))
+
+		// 5️⃣ Convert back to dB
+		return tToDb(t)
 	}
 
 	const getOptAlgorithm = (action: CompanionActionEvent, key: string): Easing.algorithm | undefined => {
@@ -543,17 +582,19 @@ export function GetActionsList(
 					...convertChoices(levelsChoices.channels),
 				},
 				...FaderLevelDeltaChoice,
+				makeLinearToggle,
 				...FadeDurationChoice,
 			],
 			callback: async (action, context): Promise<void> => {
 				const cmd = MainFaderPath(action.options)
 				const currentState = state.get(cmd)
 				const currentVal = currentState && currentState[0]?.type === 'f' ? floatToDB(currentState[0]?.value) : undefined
+				const nextVal = correctForFader(currentVal || -90, action, await getDeltaNumber(action, context, 0))
 				if (typeof currentVal === 'number') {
 					transitions.runForDb(
 						cmd,
 						currentVal,
-						currentVal + (await getDeltaNumber(action, context, 0)),
+						nextVal || (await getDeltaNumber(action, context, 0)),
 						getOptNumber(action, 'fadeDuration', 0),
 						getOptAlgorithm(action, 'fadeAlgorithm'),
 						getOptCurve(action, 'fadeType')

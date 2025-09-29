@@ -1,4 +1,5 @@
 import {
+	CompanionInputFieldCheckbox,
 	CompanionInputFieldDropdown,
 	CompanionInputFieldNumber,
 	CompanionOptionValues,
@@ -150,6 +151,13 @@ export const FaderLevelChoice: CompanionInputFieldNumber = {
 	step: 0.1,
 	min: -90,
 	max: 10,
+}
+
+export const makeLinearToggle: CompanionInputFieldCheckbox = {
+	type: 'checkbox',
+	label: 'Make Fader Linear',
+	default: false,
+	id: 'faderLinear',
 }
 
 export const FaderLevelDeltaChoice: SomeCompanionActionInputField[] = [
