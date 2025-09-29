@@ -3,7 +3,7 @@
 	"name": "behringer-x32",
 	"shortname": "x32",
 	"description": "Module for controling the Midas M32 and Behringer X32 consoles",
-	"version": "3.0.0-0",
+	"version": "3.2.1",
 	"license": "MIT",
 	"repository": "git+https://github.com/bitfocus/companion-module-behringer-x32.git",
 	"bugs": "https://github.com/bitfocus/companion-module-behringer-x32/issues",
@@ -18,7 +18,7 @@
 		"type": "node18",
 		"api": "nodejs-ipc",
 		"apiVersion": "0.0.0",
-		"entrypoint": "../dist/index.js"
+		"entrypoint": "../main.js"
 	},
 	"manufacturer": "Behringer/Midas",
 	"products": ["X32/M32"],

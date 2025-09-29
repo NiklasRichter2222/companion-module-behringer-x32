@@ -1,6 +1,6 @@
 {
 	"name": "behringer-x32",
-	"version": "3.2.0",
+	"version": "3.2.1",
 	"main": "dist/index.js",
 	"type": "module",
 	"scripts": {
@@ -10,7 +10,9 @@
 		"build:main": "tsc -p tsconfig.build.json",
 		"lint:raw": "./node_modules/.bin/eslint --ext .ts --ext .js --ignore-pattern dist --ignore-pattern pkg",
 		"lint": "yarn lint:raw .",
-		"dist": "yarn companion-module-build"
+		"dist": "yarn companion-module-build",
+		"clean": "rimraf dist",
+		"bundle": "npm run clean && node bundle.js"
 	},
 	"repository": {
 		"type": "git",
@@ -42,6 +44,7 @@
 		"@companion-module/tools": "^1.5.1",
 		"@types/debug": "^4.1.12",
 		"@types/node": "^18.19.41",
+		"esbuild": "^0.25.10",
 		"husky": "^9.1.1",
 		"lint-staged": "^15.2.7",
 		"rimraf": "^5.0.9",
