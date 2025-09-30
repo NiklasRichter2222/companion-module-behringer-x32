@@ -265,7 +265,7 @@ export const InputTrimChoice: SomeCompanionActionInputField[] = [
 export const HeadampGainChoice: SomeCompanionActionInputField[] = [
 	{
 		type: 'checkbox',
-		label: 'Use a variable for Trim',
+		label: 'Use a variable for Gain',
 		default: false,
 		id: 'useVariableGain',
 	},
