@@ -39,6 +39,8 @@ import {
 	GetPresetsChoices,
 	FaderLevelChoiceVariable,
 	makeLinearToggle,
+	InputTrimChoice,
+	DimmAttenuationChoice,
 } from './choices.js'
 import {
 	MutePath,
@@ -1299,22 +1301,12 @@ export function GetActionsList(
 					id: 'input',
 					...convertChoices(levelsChoices.allSources),
 				},
-				{
-					type: 'number',
-					label: 'Trim',
-					id: 'trim',
-					range: true,
-					required: true,
-					default: 0,
-					step: 0.1,
-					min: -18,
-					max: 18,
-				},
+				...InputTrimChoice,
 			],
-			callback: async (action): Promise<void> => {
+			callback: async (action, context): Promise<void> => {
 				sendOsc(`${action.options.input}/preamp/trim`, {
 					type: 'f',
-					value: trimToFloat(getOptNumber(action, 'trim')),
+					value: trimToFloat(await getOptNumberVariable(action, 'varTrim', 'trim', context)),
 				})
 			},
 		},
@@ -1327,12 +1319,12 @@ export function GetActionsList(
 					id: 'headamp',
 					...convertChoices(GetHeadampChoices()),
 				},
-				HeadampGainChoice,
+				...HeadampGainChoice,
 			],
-			callback: async (action): Promise<void> => {
+			callback: async (action, context): Promise<void> => {
 				sendOsc(`${action.options.headamp}/gain`, {
 					type: 'f',
-					value: headampGainToFloat(getOptNumber(action, 'gain')),
+					value: headampGainToFloat(await getOptNumberVariable(action, 'varGain', 'gain', context)),
 				})
 			},
 		},
@@ -1818,23 +1810,11 @@ export function GetActionsList(
 		},
 		[ActionId.SoloDimAttenuation]: {
 			name: 'Set Dim Attenuation',
-			options: [
-				{
-					type: 'number',
-					label: 'Dim Attenuation',
-					id: 'dimAtt',
-					range: true,
-					required: true,
-					default: -10,
-					step: 1,
-					min: -40,
-					max: 0,
-				},
-			],
-			callback: async (action): Promise<void> => {
+			options: [...DimmAttenuationChoice],
+			callback: async (action, context): Promise<void> => {
 				sendOsc(`/config/solo/dimatt`, {
 					type: 'f',
-					value: getOptNumber(action, 'dimAtt') / 40 + 1,
+					value: (await getOptNumberVariable(action, 'varDimAtt', 'dimAtt', context)) / 40 + 1,
 				})
 			},
 		},

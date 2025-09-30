@@ -231,18 +231,100 @@ export const PanningDelta: SomeCompanionActionInputField[] = [
 		},
 	},
 ]
+export const InputTrimChoice: SomeCompanionActionInputField[] = [
+	{
+		type: 'checkbox',
+		label: 'Use a variable for Trim',
+		default: false,
+		id: 'useVariableTrim',
+	},
+	{
+		type: 'number',
+		label: 'Trim',
+		id: 'trim',
+		range: true,
+		required: true,
+		default: 0,
+		step: 0.1,
+		min: -18,
+		max: 18,
+		isVisible: (options: CompanionOptionValues): boolean => {
+			return !options.useVariableTrim
+		},
+	},
+	{
+		type: 'textinput',
+		label: 'Trim',
+		id: 'varTrim',
+		useVariables: true,
+		isVisible: (options: CompanionOptionValues): boolean => {
+			return !!options.useVariableTrim
+		},
+	},
+]
+export const HeadampGainChoice: SomeCompanionActionInputField[] = [
+	{
+		type: 'checkbox',
+		label: 'Use a variable for Trim',
+		default: false,
+		id: 'useVariableGain',
+	},
+	{
+		type: 'number',
+		label: 'Gain',
+		id: 'gain',
+		range: true,
+		required: true,
+		default: 0,
+		step: 0.1,
+		min: -12,
+		max: 60,
+		isVisible: (options: CompanionOptionValues): boolean => {
+			return !options.useVariableGain
+		},
+	},
+	{
+		type: 'textinput',
+		label: 'Gain',
+		id: 'varGain',
+		useVariables: true,
+		isVisible: (options: CompanionOptionValues): boolean => {
+			return !!options.useVariableGain
+		},
+	},
+]
 
-export const HeadampGainChoice: CompanionInputFieldNumber = {
-	type: 'number',
-	label: 'Gain',
-	id: 'gain',
-	range: true,
-	required: true,
-	default: 0,
-	step: 0.1,
-	min: -12,
-	max: 60,
-}
+export const DimmAttenuationChoice: SomeCompanionActionInputField[] = [
+	{
+		type: 'checkbox',
+		label: 'Use a variable for Attenuation',
+		default: false,
+		id: 'useVariableDimm',
+	},
+	{
+		type: 'number',
+		label: 'Dim Attenuation',
+		id: 'dimAtt',
+		range: true,
+		required: true,
+		default: -10,
+		step: 1,
+		min: -40,
+		max: 0,
+		isVisible: (options: CompanionOptionValues): boolean => {
+			return !options.useVariableDimm
+		},
+	},
+	{
+		type: 'textinput',
+		label: 'Dim Attenuation',
+		id: 'varDimAtt',
+		useVariables: true,
+		isVisible: (options: CompanionOptionValues): boolean => {
+			return !!options.useVariableDimm
+		},
+	},
+]
 export const MuteChoice: CompanionInputFieldDropdown = {
 	type: 'dropdown',
 	label: 'Mute / Unmute',
