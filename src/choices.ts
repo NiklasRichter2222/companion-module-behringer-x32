@@ -119,7 +119,6 @@ export const FaderLevelChoiceVariable: SomeCompanionActionInputField[] = [
 		label: 'Fader Level (-90 = -inf)',
 		id: 'fad',
 		range: true,
-		required: true,
 		default: 0,
 		step: 0.1,
 		min: -90,
@@ -132,8 +131,6 @@ export const FaderLevelChoiceVariable: SomeCompanionActionInputField[] = [
 		type: 'textinput',
 		label: 'Fader Level (-90 = -inf)',
 		id: 'var',
-		required: true,
-
 		useVariables: true,
 		isVisible: (options: CompanionOptionValues): boolean => {
 			return !!options.useVariable
@@ -171,6 +168,8 @@ export const FaderLevelDeltaChoice: SomeCompanionActionInputField[] = [
 		type: 'number',
 		label: 'Delta',
 		id: 'delta',
+		range: true,
+
 		default: 1,
 		max: 100,
 		min: -100,

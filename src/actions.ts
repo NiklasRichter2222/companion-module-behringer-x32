@@ -247,43 +247,57 @@ export function GetActionsList(
 		}
 		return val
 	}
-	function dbToT(db: number) {
-		if (db <= -60) return (db + 90) * (0.05 / 30) // segment 1
-		if (db <= -30) return 0.05 + (db + 60) * (0.2 / 30) // segment 2
-		if (db <= -10) return 0.25 + (db + 30) * (0.25 / 20) // segment 3
-		return 0.5 + (db + 10) * (0.5 / 20) // segment 4
-	}
 
-	/**
-	 * Convert a normalized position t (0 … 1) back to a dB value (‑90 … 10)
-	 * using the same piecewise definition.
-	 */
-	function tToDb(t: number) {
-		if (t <= 0.05) return -90 + t * (30 / 0.05) // segment 1
-		if (t <= 0.25) return -60 + (t - 0.05) * (30 / 0.2) // segment 2
-		if (t <= 0.5) return -30 + (t - 0.25) * (20 / 0.25) // segment 3
-		return -10 + (t - 0.5) * (20 / 0.5) // segment 4
-	}
-	const correctForFader = (currentVal: number, action: CompanionActionInfo, deltaDb: number): number | undefined => {
-		if (action.options.faderLinear) return currentVal
-		// 1️⃣ Convert current dB to normalized position
-		let t = dbToT(currentVal)
+	//corrects for fader non linearity thus making the adjust based on fader position(so moving it 50% instead of 50 dB up for example)
+	function correctForFader(currentY: number, action: CompanionActionInfo, deltaX: number) {
+		deltaX = deltaX / 100
+		currentY = Math.round(currentY * 10) / 10
 
-		// 2️⃣ Determine which segment we are in to get the proper slope
-		let slope
-		if (currentVal <= -60) slope = 0.05 / 30 // 0.0016667
-		else if (currentVal <= -30) slope = 0.2 / 30 // 0.0066667
-		else if (currentVal <= -10) slope = 0.25 / 20 // 0.0125
-		else slope = 0.5 / 20 // 0.025
+		console.log(currentY, ' wird zu ', deltaX)
+		if (!action.options.faderLinear) return currentY
 
-		// 3️⃣ Convert the dB delta to a change in normalized position
-		const dt = Number(deltaDb) * slope
+		// ----- 1. Invert the piece‑wise function (y → x) -----
+		const segments = [
+			// [x0, y0, x1, y1]  (ascending x, ascending y)
+			[0, -90, 0.05, -60],
+			[0.05, -60, 0.25, -30],
+			[0.25, -30, 0.5, -10],
+			[0.5, -10, 1, 10],
+		]
+		// locate the segment that contains currentY
+		let curX
+		for (const [x0, y0, x1, y1] of segments) {
+			// because y increases with x, check y0 <= currentY <= y1
+			if (currentY >= y0 && currentY <= y1) {
+				// linear interpolation: x = x0 + (currentY - y0) * (x1 - x0) / (y1 - y0)
+				curX = x0 + ((currentY - y0) * (x1 - x0)) / (y1 - y0)
+				break
+			}
+		}
+		console.log('x', curX)
+		// If outside the defined range, clamp to the nearest endpoint
+		if (curX === undefined) {
+			curX = currentY < -90 ? 0 : 1
+		}
+		console.log('x2', curX)
 
-		// 4️⃣ Apply the change and clamp to [0,1]
-		t = Math.min(1, Math.max(0, t + dt))
+		// ----- 2. Apply the delta and clamp to the domain -----
+		const newX = Math.min(1, Math.max(0, curX + deltaX))
+		console.log('xn', newX)
 
-		// 5️⃣ Convert back to dB
-		return tToDb(t)
+		// ----- 3. Evaluate the forward piece‑wise function (x → y) -----
+		let newY
+		for (const [x0, y0, x1, y1] of segments) {
+			if (newX >= x0 && newX <= x1) {
+				// linear interpolation: y = y0 + (newX - x0) * (y1 - y0) / (x1 - x0)
+				newY = y0 + ((newX - x0) * (y1 - y0)) / (x1 - x0)
+				break
+			}
+		}
+
+		if (newY === undefined) newY = newX === 0 ? -90 : 10
+		newY = Math.round(newY * 10) / 10
+		return newY
 	}
 
 	const getOptAlgorithm = (action: CompanionActionEvent, key: string): Easing.algorithm | undefined => {
@@ -594,7 +608,7 @@ export function GetActionsList(
 					transitions.runForDb(
 						cmd,
 						currentVal,
-						nextVal || (await getDeltaNumber(action, context, 0)),
+						nextVal,
 						getOptNumber(action, 'fadeDuration', 0),
 						getOptAlgorithm(action, 'fadeAlgorithm'),
 						getOptCurve(action, 'fadeType')
