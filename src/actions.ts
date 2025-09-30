@@ -603,8 +603,8 @@ export function GetActionsList(
 				const cmd = MainFaderPath(action.options)
 				const currentState = state.get(cmd)
 				const currentVal = currentState && currentState[0]?.type === 'f' ? floatToDB(currentState[0]?.value) : undefined
-				const nextVal = correctForFader(currentVal || -90, action, await getDeltaNumber(action, context, 0))
 				if (typeof currentVal === 'number') {
+					const nextVal = correctForFader(currentVal, action, await getDeltaNumber(action, context, 0))
 					transitions.runForDb(
 						cmd,
 						currentVal,
@@ -799,9 +799,10 @@ export function GetActionsList(
 				const cmd = SendChannelToBusPath(action.options)
 				const currentState = state.get(cmd)
 				const currentVal = currentState && currentState[0]?.type === 'f' ? floatToDB(currentState[0]?.value) : undefined
-				const nextVal = correctForFader(currentVal || -90, action, await getDeltaNumber(action, context, 0))
 
 				if (typeof currentVal === 'number') {
+					const nextVal = correctForFader(currentVal, action, await getDeltaNumber(action, context, 0))
+
 					transitions.runForDb(cmd, currentVal, nextVal, getOptNumber(action, 'fadeDuration', 0))
 				}
 			},
@@ -1071,8 +1072,9 @@ export function GetActionsList(
 				const cmd = SendBusToMatrixPath(action.options)
 				const currentState = state.get(cmd)
 				const currentVal = currentState && currentState[0]?.type === 'f' ? floatToDB(currentState[0]?.value) : undefined
-				const nextVal = correctForFader(currentVal || -90, action, await getDeltaNumber(action, context, 0))
 				if (typeof currentVal === 'number') {
+					const nextVal = correctForFader(currentVal, action, await getDeltaNumber(action, context, 0))
+
 					transitions.runForDb(cmd, currentVal, nextVal, getOptNumber(action, 'fadeDuration', 0))
 				}
 			},
