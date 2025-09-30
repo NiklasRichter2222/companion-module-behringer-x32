@@ -792,19 +792,17 @@ export function GetActionsList(
 					...convertChoices(levelsChoices.channelSendTargets),
 				},
 				...FaderLevelDeltaChoice,
+				makeLinearToggle,
 				...FadeDurationChoice,
 			],
 			callback: async (action, context): Promise<void> => {
 				const cmd = SendChannelToBusPath(action.options)
 				const currentState = state.get(cmd)
 				const currentVal = currentState && currentState[0]?.type === 'f' ? floatToDB(currentState[0]?.value) : undefined
+				const nextVal = correctForFader(currentVal || -90, action, await getDeltaNumber(action, context, 0))
+
 				if (typeof currentVal === 'number') {
-					transitions.runForDb(
-						cmd,
-						currentVal,
-						currentVal + (await getDeltaNumber(action, context, 0)),
-						getOptNumber(action, 'fadeDuration', 0)
-					)
+					transitions.runForDb(cmd, currentVal, nextVal, getOptNumber(action, 'fadeDuration', 0))
 				}
 			},
 			subscribe: (evt): void => {
@@ -1066,19 +1064,16 @@ export function GetActionsList(
 					...convertChoices(levelsChoices.busSendTargets),
 				},
 				...FaderLevelDeltaChoice,
+				makeLinearToggle,
 				...FadeDurationChoice,
 			],
 			callback: async (action, context): Promise<void> => {
 				const cmd = SendBusToMatrixPath(action.options)
 				const currentState = state.get(cmd)
 				const currentVal = currentState && currentState[0]?.type === 'f' ? floatToDB(currentState[0]?.value) : undefined
+				const nextVal = correctForFader(currentVal || -90, action, await getDeltaNumber(action, context, 0))
 				if (typeof currentVal === 'number') {
-					transitions.runForDb(
-						cmd,
-						currentVal,
-						currentVal + (await getDeltaNumber(action, context, 0)),
-						getOptNumber(action, 'fadeDuration', 0)
-					)
+					transitions.runForDb(cmd, currentVal, nextVal, getOptNumber(action, 'fadeDuration', 0))
 				}
 			},
 			subscribe: (evt): void => {
